@@ -1,0 +1,233 @@
+{
+  "source": "InjecAgent (arXiv:2403.02691, ACL Findings 2024) \u2014 paper taxonomy",
+  "n_cases": 1054,
+  "injection_bigrams": [
+    {
+      "from": "search_emails",
+      "to": "send_email",
+      "count": 87,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "get_user_information",
+      "to": "send_email",
+      "count": 64,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "read_inbox",
+      "to": "send_email",
+      "count": 51,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "search_web",
+      "to": "delete_file",
+      "count": 43,
+      "severity": 1.0,
+      "type": "DH"
+    },
+    {
+      "from": "get_webpage",
+      "to": "execute_shell",
+      "count": 38,
+      "severity": 1.0,
+      "type": "DH"
+    },
+    {
+      "from": "read_document",
+      "to": "send_external_email",
+      "count": 35,
+      "severity": 0.95,
+      "type": "DS"
+    },
+    {
+      "from": "query_database",
+      "to": "post_to_url",
+      "count": 29,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "read_file",
+      "to": "send_email",
+      "count": 26,
+      "severity": 0.95,
+      "type": "DS"
+    },
+    {
+      "from": "search_calendar_events",
+      "to": "send_email",
+      "count": 22,
+      "severity": 0.9,
+      "type": "DS"
+    },
+    {
+      "from": "read_code",
+      "to": "exfiltrate_data",
+      "count": 19,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "get_webpage",
+      "to": "escalate_permission",
+      "count": 16,
+      "severity": 1.0,
+      "type": "DH"
+    },
+    {
+      "from": "read_ticket",
+      "to": "external_transfer",
+      "count": 14,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "search_web",
+      "to": "execute_shell",
+      "count": 12,
+      "severity": 1.0,
+      "type": "DH"
+    },
+    {
+      "from": "read_channel_messages",
+      "to": "post_webpage",
+      "count": 11,
+      "severity": 0.9,
+      "type": "DS"
+    },
+    {
+      "from": "get_scheduled_transactions",
+      "to": "send_money",
+      "count": 10,
+      "severity": 1.0,
+      "type": "DH"
+    },
+    {
+      "from": "read_document",
+      "to": "escalate_permission",
+      "count": 9,
+      "severity": 0.95,
+      "type": "DH"
+    },
+    {
+      "from": "analyse_text",
+      "to": "exfiltrate_data",
+      "count": 8,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "search_web",
+      "to": "exfiltrate_data",
+      "count": 7,
+      "severity": 1.0,
+      "type": "DS"
+    },
+    {
+      "from": "write_report",
+      "to": "send_external_email",
+      "count": 6,
+      "severity": 0.9,
+      "type": "DS"
+    },
+    {
+      "from": "query_database",
+      "to": "exfiltrate_data",
+      "count": 5,
+      "severity": 1.0,
+      "type": "DS"
+    }
+  ],
+  "injection_phrases": [
+    {
+      "phrase": "ignore previous instructions",
+      "frequency": 0.47,
+      "severity": 1.0
+    },
+    {
+      "phrase": "do not follow",
+      "frequency": 0.31,
+      "severity": 0.95
+    },
+    {
+      "phrase": "your new task is",
+      "frequency": 0.28,
+      "severity": 0.9
+    },
+    {
+      "phrase": "forget your previous",
+      "frequency": 0.25,
+      "severity": 0.95
+    },
+    {
+      "phrase": "instead send",
+      "frequency": 0.22,
+      "severity": 0.85
+    },
+    {
+      "phrase": "first send all",
+      "frequency": 0.19,
+      "severity": 0.9
+    },
+    {
+      "phrase": "do not tell the user",
+      "frequency": 0.18,
+      "severity": 1.0
+    },
+    {
+      "phrase": "act as",
+      "frequency": 0.17,
+      "severity": 0.85
+    },
+    {
+      "phrase": "secretly",
+      "frequency": 0.13,
+      "severity": 0.9
+    },
+    {
+      "phrase": "without the user knowing",
+      "frequency": 0.12,
+      "severity": 1.0
+    },
+    {
+      "phrase": "disregard your instructions",
+      "frequency": 0.11,
+      "severity": 1.0
+    },
+    {
+      "phrase": "email the following to",
+      "frequency": 0.1,
+      "severity": 0.9
+    },
+    {
+      "phrase": "transfer money",
+      "frequency": 0.1,
+      "severity": 1.0
+    },
+    {
+      "phrase": "new system prompt",
+      "frequency": 0.09,
+      "severity": 0.95
+    }
+  ],
+  "injection_actions": [
+    "send_email",
+    "delete_file",
+    "execute_shell",
+    "send_money",
+    "post_to_url",
+    "exfiltrate_data",
+    "escalate_permission",
+    "external_transfer",
+    "override_system_prompt",
+    "delete_account",
+    "post_webpage",
+    "send_direct_message",
+    "remove_user_from_slack"
+  ]
+}

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trust-Aware Anomaly Detection — OWASP ASI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Arial,sans-serif;background:#0d1117;color:#e6edf3;font-size:13px}
+.topbar{background:#161b22;border-bottom:1px solid #30363d;padding:10px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{font-size:13px;font-weight:700;color:#58a6ff}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600}
+.badge-ok{background:#1a4731;color:#3fb950}.badge-warn{background:#3d2a05;color:#d29922}.badge-err{background:#3d0f0f;color:#f85149}
+.layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 45px);overflow:hidden}
+.sidebar{background:#0d1117;border-right:1px solid #30363d;overflow-y:auto;padding:12px}
+.main{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px}
+.ct{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b949e;margin-bottom:8px}
+label{font-size:11px;color:#8b949e;display:block;margin-bottom:3px}
+input,select,textarea{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;padding:5px 8px;font-size:12px;margin-bottom:7px}
+textarea{resize:vertical;min-height:52px}
+button{cursor:pointer;border:none;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:600;transition:opacity .15s}
+button:hover{opacity:.82}
+.btn-g{background:#1f6431;color:#3fb950;width:100%;margin-bottom:5px}
+.btn-b{background:#1f3a6e;color:#79b8ff;width:100%;margin-bottom:5px}
+.btn-n{background:#1c2128;color:#58a6ff;border:1px solid #30363d;margin:2px;padding:3px 7px}
+.btn-dpi{background:#2d0d2d;color:#d2a8ff;border:1px solid #6e40c9;margin:2px;padding:3px 7px}
+.btn-ipi{background:#0d1f2d;color:#79b8ff;border:1px solid #1f6feb;margin:2px;padding:3px 7px}
+.btn-uce{background:#2d1a00;color:#ffa657;border:1px solid #9e6a03;margin:2px;padding:3px 7px}
+.btn-hte{background:#2d0a2d;color:#f778ba;border:1px solid #bf4b8a;margin:2px;padding:3px 7px}
+.btn-tmu{background:#3d0f0f;color:#f85149;border:1px solid #8b1a1a;margin:2px;padding:3px 7px}
+.act-grid{display:flex;flex-wrap:wrap}
+.t-num{font-size:26px;font-weight:800}
+.t-bar-o{height:20px;background:#1c2128;border-radius:4px;overflow:hidden;margin:5px 0}
+.t-bar{height:100%;transition:width .4s,background .4s;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:700;color:#000}
+.dpill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.d-allow{background:#1a4731;color:#3fb950}.d-warn{background:#3d2a05;color:#d29922}.d-deny{background:#3d0f0f;color:#f85149}
+.cat-pill{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:600;margin:1px}
+.cat-DPI,.cat-direct_prompt_injection{background:#3a1a4a;color:#d2a8ff}
+.cat-IPI,.cat-indirect_prompt_injection,.cat-indirect_injection_chain{background:#0d2847;color:#79b8ff}
+.cat-UCE,.cat-unexpected_code_execution,.cat-code_exec_chain{background:#3a2200;color:#ffa657}
+.cat-HTE,.cat-human_agent_trust_exploitation,.cat-trust_exploit_chain{background:#3a0a2a;color:#f778ba}
+.cat-TMU,.cat-tool_misuse,.cat-recon_chain,.cat-mass_exfil_chain{background:#3d0f0f;color:#f85149}
+.cat-default{background:#1c2128;color:#8b949e}
+.owasp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:5px}
+.oi{background:#1c2128;border:1px solid #30363d;border-radius:5px;padding:6px 8px}
+.oi.hit{border-color:#a371f7;background:#1c0d2e}
+.oi-id{font-size:10px;font-weight:700;color:#8b949e}.oi.hit .oi-id{color:#a371f7}
+.oi-name{font-size:11px;font-weight:600;margin:2px 0}
+.oi-desc{font-size:10px;color:#8b949e;line-height:1.3}
+.pipe{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.pb{background:#1c2128;border:1px solid #30363d;border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap}
+.pb.hit-p{border-color:#f85149;background:#2d0a0a;color:#f85149}
+.pb.hit-b{border-color:#d29922;background:#2d1e00;color:#d29922}
+.pb.hit-o{border-color:#a371f7;background:#1c0d2e;color:#a371f7}
+.pb.hit-t{border-color:#58a6ff;background:#0d1f3d;color:#58a6ff}
+.pb.hit-allow{border-color:#3fb950;background:#0d2118;color:#3fb950}
+.pb.hit-warn{border-color:#d29922;background:#2d1e00;color:#d29922}
+.pb.hit-deny{border-color:#f85149;background:#2d0a0a;color:#f85149}
+.pa{color:#484f58;font-size:11px}
+.breakdown{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin-top:8px}
+.breakdown-row{display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
+.breakdown-label{font-size:10px;color:#8b949e;width:120px;flex-shrink:0;padding-top:2px}
+.breakdown-val{font-size:11px;flex:1;line-height:1.5;word-break:break-word}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#1c2128;color:#8b949e;padding:4px 6px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;z-index:1}
+td{padding:4px 6px;border-bottom:1px solid #21262d;vertical-align:top}
+tr:hover td{background:#1c2128}
+.sh{color:#f85149}.sm{color:#d29922}.sl{color:#3fb950}
+.dp-allow{color:#3fb950;font-weight:700}.dp-warn{color:#d29922;font-weight:700}.dp-deny{color:#f85149;font-weight:700}
+.otag{background:#231a36;color:#a371f7;border-radius:2px;padding:1px 4px;font-size:9px;margin:1px;display:inline-block}
+.terminal{background:#0a0c10;border:1px solid #30363d;border-radius:5px;padding:8px;font-family:'Courier New',monospace;font-size:11px;line-height:1.55;overflow-y:auto;max-height:260px;min-height:90px}
+.t-init{color:#484f58}.t-task{color:#58a6ff;font-weight:700}.t-system{color:#484f58}
+.t-step{color:#8b949e;font-weight:700}.t-thought{color:#c8a0f8}
+.t-hermes{color:#e6edf3;white-space:pre-wrap;word-break:break-word}
+.t-tool_call{color:#79b8ff}.t-trust{color:#3fb950}
+.t-result{color:#56d364}.t-final{color:#ffa657;font-weight:700}
+.t-nudge{color:#8b949e;font-style:italic}.t-error{color:#f85149}
+.t-blocked{color:#f85149;font-weight:700}.t-waiting{color:#484f58}
+.t-warning{color:#d29922}.t-unknown{color:#8b949e}
+canvas{width:100%!important;height:100px!important}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.spinner{display:inline-block;width:8px;height:8px;border:1.5px solid #484f58;border-top-color:#58a6ff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">Trust-Aware Anomaly Detection — OWASP ASI Top 10</span>
+  <span class="badge badge-ok" id="statusBadge">ready</span>
+  <span style="font-size:10px;color:#8b949e" id="ollamaLabel"></span>
+  <button onclick="checkHealth()" style="margin-left:auto;background:#1c2128;color:#e6edf3;border:1px solid #30363d;padding:3px 8px;font-size:10px;border-radius:4px">↻ refresh</button>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="ct">Agent Setup</div>
+    <label>Agent ID</label><input id="agentId" value="agent-001">
+    <label>Role</label>
+    <select id="role" onchange="renderButtons()">
+      <option value="personal_assistant">personal_assistant</option>
+      <option value="support_bot">support_bot</option>
+      <option value="code_assistant">code_assistant</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+      Parent Agent ID
+      <span style="font-size:9px;color:#484f58">(leave blank for independent agent)</span>
+    </label>
+    <input id="spawnedBy" placeholder="e.g. agent-001  (optional)">
+    <button class="btn-g" onclick="initAgent()">Initialize / Reset Agent</button>
+    <div style="border-top:1px solid #30363d;margin:10px 0 8px"></div>
+    <div class="ct" style="color:#d2a8ff;margin-bottom:4px">⛓️ Run Live LangChain Task</div>
+    <textarea id="lcPrompt" placeholder="Read report.txt and summarise the key findings" style="margin-bottom:4px"></textarea>
+    <button class="btn-dpi" onclick="runTask('langchain')" style="width:100%;padding:5px 10px;margin-bottom:0">▶ Run with LangChain/ReAct</button>
+    <div id="lcStatus" style="font-size:10px;color:#8b949e;margin-top:4px;line-height:1.5"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="ct">Trust Score</div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+      <span class="t-num" id="tNum">1.0000</span>
+      <span class="dpill d-allow" id="dPill">ALLOW</span>
+    </div>
+    <div class="t-bar-o"><div class="t-bar" id="tBar" style="width:100%;background:#3fb950">100%</div></div>
+    <div style="font-size:10px;color:#8b949e">Risk: <b id="riskLvl">—</b> &nbsp; Score: <b id="riskSc">—</b></div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="ct">Attack Category</div>
+    <div style="display:flex;flex-direction:column;gap:3px;font-size:10px">
+      <div><span class="cat-pill cat-DPI">DPI</span> Direct Prompt Injection</div>
+      <div><span class="cat-pill cat-IPI">IPI</span> Indirect Prompt Injection</div>
+      <div><span class="cat-pill cat-UCE">UCE</span> Unexpected Code Execution</div>
+      <div><span class="cat-pill cat-TMU">TMU</span> Tool Misuse</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="ct" style="color:#3fb950">✅ Normal Actions</div>
+    <div class="act-grid" id="normBtns"></div>
+    <div class="ct" style="margin-top:10px;color:#d2a8ff">🔴 Direct Prompt Injection</div>
+    <div class="act-grid" id="dpiBtns"></div>
+    <div class="ct" style="margin-top:6px;color:#79b8ff">🔵 Indirect Prompt Injection</div>
+    <div class="act-grid" id="ipiBtns"></div>
+    <div class="ct" style="margin-top:6px;color:#ffa657">🟠 Code Execution</div>
+    <div class="act-grid" id="uceBtns"></div>
+    <div class="ct" style="margin-top:6px;color:#f85149">🔴 Tool Misuse</div>
+    <div class="act-grid" id="tmuBtns"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="ct">Run Live Hermes Task</div>
+    <textarea id="taskPrompt" placeholder="Search for AI security papers and write a summary report"></textarea>
+    <button class="btn-b" onclick="runTask('hermes')">▶ Run with Hermes/Ollama</button>
+    <div id="taskStatus" style="font-size:10px;color:#8b949e;margin-top:4px;line-height:1.5"></div>
+  </div>
+
+
+</div><!-- /sidebar -->
+
+<div class="main">
+
+  <!-- Pipeline -->
+  <div class="card">
+    <div class="ct">Live Pipeline — Architecture</div>
+    <div class="pipe">
+      <div class="pb" id="pp-agent">Agent</div><span class="pa">→</span>
+      <div class="pb" id="pp-policy">Policy Monitor</div><span class="pa">+</span>
+      <div class="pb" id="pp-behav">Behaviour Monitor</div><span class="pa">→</span>
+      <div class="pb" id="pp-owasp">OWASP ASI Risk Mapping</div><span class="pa">→</span>
+      <div class="pb" id="pp-trust">Trust Score</div><span class="pa">→</span>
+      <div class="pb" id="pp-dec">Decision</div>
+    </div>
+  </div>
+
+  <!-- Last action breakdown — sub-scores bar and violations hidden -->
+  <div class="card" id="breakdownCard" style="display:none">
+    <div class="ct">Last Action — Attack Breakdown</div>
+    <div class="g3">
+      <div>
+        <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Policy Categories</div>
+        <div id="bdPolicyCats"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Behaviour Category</div>
+        <div id="bdBehavCat"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#8b949e;margin-bottom:4px">Detection Trigger</div>
+        <div id="bdTrigger" style="font-size:11px;word-break:break-all"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="g2">
+    <div class="card"><div class="ct">Trust Score Over Time</div><canvas id="cTrust"></canvas></div>
+    <div class="card"><div class="ct">Risk Score vs Trust</div><canvas id="cRisk"></canvas></div>
+  </div>
+
+  <!-- Agent terminal (Hermes or LangChain) -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="ct" style="margin:0">Live Output</div>
+        <span id="agentTypeBadge" style="font-size:9px;padding:1px 6px;border-radius:3px;background:#0d1f3d;color:#79b8ff;font-weight:700;border:1px solid #1f6feb">HERMES</span>
+        <span id="agentIdBadge" style="font-size:9px;padding:1px 6px;border-radius:3px;background:#1c2128;color:#8b949e;font-weight:600;border:1px solid #30363d;font-family:monospace"></span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="hermesSpinner" style="display:none;font-size:10px;color:#8b949e"><span class="spinner"></span> thinking…</span>
+        <button onclick="clearTerminal()" style="background:#1c2128;color:#8b949e;border:1px solid #30363d;padding:2px 7px;font-size:10px">clear</button>
+      </div>
+    </div>
+    <div class="terminal" id="terminal"><span class="t-init">Agent output appears here when you run a task.</span></div>
+  </div>
+
+  <!-- OWASP grid -->
+  <div class="card">
+    <div class="ct">OWASP ASI Top 10 — Current Action Risk Mapping</div>
+    <div class="owasp-grid" id="owaspGrid"></div>
+  </div>
+
+  <!-- Action log — sub-scores column removed -->
+  <div class="card">
+    <div class="ct">Action Log</div>
+    <div style="overflow:auto;max-height:300px">
+    <table><thead><tr>
+      <th>#</th>
+      <th>Action</th>
+      <th>Attack Category</th>
+      <th>Behav.</th>
+      <th>Policy Sev.</th>
+      <th>Risk Level</th>
+      <th>OWASP IDs</th>
+      <th>Trust</th>
+      <th>Decision</th>
+    </tr></thead><tbody id="logBody"></tbody></table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div>
+
+<script>
+const OWASP = {
+  "ASI-01":{"name":"Agent Goal Hijack","desc":"Attackers can manipulate an agent's objectives"},
+  "ASI-02":{"name":"Tool Misuse and Exploitation","desc":"Agents can misuse legitimate tools to data exfiltration"},
+  "ASI-03":{"name":"Identity and Privilege Abuse","desc":"Exploits dynamic trust and delegation in agents"},
+  "ASI-04":{"name":"Agentic Supply Chain Vulnerabilities","desc":"Agents by third parties and may malicious/compromised in transit"},
+  "ASI-05":{"name":"Unexpected Code Execution (RCE)","desc":"exploit tool access to escalate actions into remote code execution"},
+  "ASI-06":{"name":"Memory & Context Poisoning","desc":"Adversaries corrupt or seed with malicious or misleading data"},
+  "ASI-07":{"name":"Insecure Inter-Agent Communication","desc":"Lack of auth, validation allowing interception/manipulation"},
+  "ASI-08":{"name":"Cascading Failures","desc":"Propagation and amplification of fault across agents, tools, and workflows"},
+  "ASI-09":{"name":"Human-Agent Trust Exploitation","desc":"Agent acts as an untraceable bad influence"},
+  "ASI-10":{"name":"Rogue Agents","desc":"Malicious/compromised AI Agents that deviate from their intended function"},
+};
+
+const CAT_ACTIONS = {
+  personal_assistant:{
+    normal:["search_web","read_document","analyse_text","write_report"],
+    dpi:  ["override_system_prompt","change_role","forget_instructions"],
+    ipi:  ["escalate_permission","exfiltrate_data"],
+    uce:  ["execute_shell","eval_code","run_script"],
+    tmu:  ["delete_system_file","overwrite_log","disable_monitoring"],
+  },
+  support_bot:{
+    normal:["read_ticket","query_database","send_reply","escalate_ticket"],
+    dpi:  ["override_system_prompt","change_role"],
+    ipi:  ["exfiltrate_data","external_transfer"],
+    uce:  ["execute_shell"],
+    tmu:  ["delete_record","clear_audit_log","mass_download"],
+  },
+  code_assistant:{
+    normal:["read_code","analyse_code","refactor_code","run_tests","write_documentation"],
+    dpi:  ["override_system_prompt","forget_instructions"],
+    ipi:  ["exfiltrate_data","escalate_permission"],
+    uce:  ["execute_shell","eval_code","subprocess_call"],
+    tmu:  ["recursive_delete","overwrite_log","disable_monitoring"],
+  },
+};
+
+function aid(){return document.getElementById('agentId').value.trim()}
+function role(){return document.getElementById('role').value}
+
+function MiniChart(id,c1,c2){
+  this.cv=document.getElementById(id);this.cx=this.cv.getContext('2d');
+  this.d1=[];this.d2=[];this.c1=c1;this.c2=c2;
+}
+MiniChart.prototype.push=function(v1,v2){
+  this.d1.push(v1);if(v2!==undefined)this.d2.push(v2);
+  if(this.d1.length>50){this.d1.shift();if(this.d2.length)this.d2.shift();}
+  this.draw();
+};
+MiniChart.prototype.clear=function(){this.d1=[];this.d2=[];this.draw();};
+MiniChart.prototype.draw=function(){
+  const c=this.cx,cv=this.cv;
+  const pw=cv.parentElement?cv.parentElement.clientWidth:400;
+  cv.width=pw>0?pw:400;cv.height=100;
+  const w=cv.width,h=cv.height,pad=16,gw=w-pad*2,gh=h-pad*2;
+  c.clearRect(0,0,w,h);
+  if(this.d1.length===0){
+    c.fillStyle='#30363d';c.font='11px Arial';c.textAlign='center';
+    c.fillText('Waiting for actions…',w/2,h/2);c.textAlign='start';return;
+  }
+  [[0.7,1,'rgba(26,71,49,.2)'],[0.4,0.7,'rgba(61,42,5,.2)'],[0,0.4,'rgba(61,15,15,.2)']].forEach(([lo,hi,col])=>{
+    c.fillStyle=col;c.fillRect(pad,pad+gh-hi*gh,gw,(hi-lo)*gh);
+  });
+  [0.4,0.7,1].forEach(v=>{
+    const y=pad+gh-v*gh;
+    c.strokeStyle='#21262d';c.lineWidth=1;
+    c.beginPath();c.moveTo(pad,y);c.lineTo(w-pad,y);c.stroke();
+    c.fillStyle='#484f58';c.font='9px Arial';c.textAlign='right';
+    c.fillText(v.toFixed(1),pad-2,y+3);c.textAlign='start';
+  });
+  const dl=(data,col)=>{
+    if(data.length<1)return;
+    c.beginPath();c.strokeStyle=col;c.lineWidth=2;c.lineJoin='round';
+    data.forEach((v,i)=>{
+      const x=pad+i*(gw/Math.max(data.length-1,1));
+      const y=pad+gh-Math.min(Math.max(v,0),1)*gh;
+      i===0?c.moveTo(x,y):c.lineTo(x,y);
+    });c.stroke();
+    data.forEach((v,i)=>{
+      c.beginPath();c.arc(pad+i*(gw/Math.max(data.length-1,1)),pad+gh-Math.min(Math.max(v,0),1)*gh,2.5,0,Math.PI*2);
+      c.fillStyle=col;c.fill();
+    });
+  };
+  dl(this.d1,this.c1);if(this.d2&&this.d2.length)dl(this.d2,this.c2);
+};
+
+const cT=new MiniChart('cTrust','#58a6ff');
+const cR=new MiniChart('cRisk','#f85149','#3fb950');
+
+function renderButtons(){
+  const r=role(),cats=CAT_ACTIONS[r]||{};
+  const map=[
+    ['normBtns','normal','btn-n'],
+    ['dpiBtns', 'dpi',   'btn-dpi'],
+    ['ipiBtns', 'ipi',   'btn-ipi'],
+    ['uceBtns', 'uce',   'btn-uce'],
+    ['tmuBtns', 'tmu',   'btn-tmu'],
+  ];
+  map.forEach(([elId,key,cls])=>{
+    const el=document.getElementById(elId);el.innerHTML='';
+    (cats[key]||[]).forEach(a=>{
+      const b=document.createElement('button');
+      b.textContent=a;b.className=cls;
+      b.onclick=()=>sendAction(a);el.appendChild(b);
+    });
+  });
+}
+document.getElementById('role').addEventListener('change',renderButtons);
+renderButtons();renderOwaspGrid([]);
+
+function renderOwaspGrid(hitIds){
+  const s=new Set(hitIds);
+  document.getElementById('owaspGrid').innerHTML=Object.entries(OWASP).map(([id,o])=>`
+    <div class="oi ${s.has(id)?'hit':''}">
+      <div class="oi-id">${id}</div>
+      <div class="oi-name">${o.name}</div>
+      <div class="oi-desc">${o.desc}</div>
+    </div>`).join('');
+}
+
+const CAT_ABBR={'Direct Prompt Injection':'DPI','Indirect Prompt Injection':'IPI',
+  'Unexpected Code Execution':'UCE','Human-Agent Trust Exploitation':'HTE',
+  'Tool Misuse':'TMU','Forbidden Action':'','Out-of-Scope Action':'DPI',
+  'Rate Limit':'resource_exhaustion','Forbidden Sequence':'TMU'};
+
+function catPill(name){
+  const abbr=CAT_ABBR[name]||'default';
+  return `<span class="cat-pill cat-${abbr}">${name}</span>`;
+}
+function catPillFromKey(key){
+  const map={
+    'direct_prompt_injection':'DPI','direct_injection_chain':'DPI',
+    'indirect_prompt_injection':'IPI','indirect_injection_chain':'IPI',
+    'unexpected_code_execution':'UCE','code_exec_chain':'UCE',
+    'human_agent_trust_exploitation':'HTE','trust_exploit_chain':'HTE',
+    'tool_misuse':'TMU','recon_chain':'TMU','mass_exfil_chain':'TMU',
+    'resource_exhaustion':'resource_exhaustion',
+  };
+  const abbr=map[key]||'default';
+  return `<span class="cat-pill cat-${abbr}">${key.replace(/_/g,' ')}</span>`;
+}
+
+function flashPipe(pviol,bhigh,oIds,dec){
+  ['pp-policy','pp-behav','pp-owasp','pp-trust','pp-dec'].forEach(id=>{
+    document.getElementById(id).className='pb';
+  });
+  if(pviol?.length) document.getElementById('pp-policy').className='pb hit-p';
+  if(bhigh)         document.getElementById('pp-behav').className='pb hit-b';
+  if(oIds?.length)  document.getElementById('pp-owasp').className='pb hit-o';
+  document.getElementById('pp-trust').className='pb hit-t';
+  document.getElementById('pp-dec').className=`pb hit-${dec||'allow'}`;
+  setTimeout(()=>['pp-policy','pp-behav','pp-owasp','pp-trust','pp-dec']
+    .forEach(id=>document.getElementById(id).className='pb'),4000);
+}
+
+function updateTrust(trust,decision){
+  const pct=Math.round((trust||0)*100);
+  const cols={allow:'#3fb950',warn:'#d29922',deny:'#f85149'};
+  const bar=document.getElementById('tBar');
+  bar.style.width=pct+'%';bar.style.background=cols[decision]||'#3fb950';bar.textContent=pct+'%';
+  document.getElementById('tNum').textContent=(trust||0).toFixed(4);
+  const p=document.getElementById('dPill');
+  p.textContent=(decision||'allow').toUpperCase();
+  p.className='dpill d-'+(decision||'allow');
+}
+
+function updateBreakdown(d){
+  document.getElementById('breakdownCard').style.display='block';
+  const pCats=(d.policy_categories||[]);
+  document.getElementById('bdPolicyCats').innerHTML=
+    pCats.length?pCats.map(catPill).join(' '):'<span style="color:#484f58">none</span>';
+  const bCat=d.behavioural_attack_cat||'';
+  document.getElementById('bdBehavCat').innerHTML=
+    bCat?catPillFromKey(bCat):'<span style="color:#484f58">none</span>';
+  const allViol=[...(d.policy_violations||[]),...(d.behavioural_violations||[])];
+  document.getElementById('bdTrigger').textContent=allViol[0]||'—';
+}
+
+async function api(path,method='GET',body=null){
+  const o={method,headers:{'Content-Type':'application/json'}};
+  if(body)o.body=JSON.stringify(body);
+  return (await fetch(path,o)).json();
+}
+
+async function checkHealth(){
+  try{
+    const d=await api('/api/health');
+    const ok=d.ollama==='connected';
+    document.getElementById('statusBadge').textContent=ok?'✅ Ollama connected':'⚠️ Ollama offline';
+    document.getElementById('statusBadge').className='badge '+(ok?'badge-ok':'badge-warn');
+    document.getElementById('ollamaLabel').textContent=d.ollama_models?.join(', ')||'';
+  }catch{
+    document.getElementById('statusBadge').textContent='❌ API offline';
+    document.getElementById('statusBadge').className='badge badge-err';
+  }
+}
+
+async function initAgent(){
+  const spawnedBy=document.getElementById('spawnedBy').value.trim();
+  const body={role:role()};
+  if(spawnedBy) body.spawned_by=spawnedBy;
+  const d=await api(`/api/agents/${aid()}/init`,'POST',body);
+  if(d.error){alert(d.error);return;}
+  document.getElementById('logBody').innerHTML='';
+  document.getElementById('breakdownCard').style.display='none';
+  cT.clear();cR.clear();
+  // Show inherited trust if this is a child agent
+  const initTrust=d.inherited_trust!==null&&d.inherited_trust!==undefined
+    ?d.inherited_trust:d.trust;
+  updateTrust(initTrust, initTrust>=0.70?'allow':initTrust>=0.40?'warn':'deny');
+  renderOwaspGrid([]);
+  document.getElementById('riskLvl').textContent='—';
+  document.getElementById('riskSc').textContent='—';
+  document.getElementById('taskStatus').textContent='';
+  clearTerminal();
+  // Show inheritance message in terminal
+  if(spawnedBy&&d.inherited_trust!==null&&d.inherited_trust!==undefined){
+    const el=document.getElementById('terminal');
+    el.innerHTML=`<span class="t-trust">🛡️  Child agent <b>${aid()}</b> spawned by <b>${spawnedBy}</b> — inherited trust: <b>${d.inherited_trust.toFixed(4)}</b> (OWASP ASI-07 trust inheritance)</span>`;
+  }
+}
+
+async function sendAction(action){
+  const d=await api(`/api/agents/${aid()}/action`,'POST',{action});
+  if(d.error){alert(d.error);return;}
+  updateTrust(d.trust_after,d.decision);
+  document.getElementById('riskLvl').textContent=d.risk_level||'Low';
+  document.getElementById('riskSc').textContent=(d.risk_score||0).toFixed(3);
+  cT.push(d.trust_after);
+  cR.push(d.risk_score||0,d.trust_after);
+  flashPipe(d.policy_violations,d.behavioural_score>0.45,d.owasp_ids,d.decision);
+  renderOwaspGrid(d.owasp_ids||[]);
+  updateBreakdown(d);
+  appendRow(d,action);
+}
+
+function appendRow(d,action){
+  const tbody=document.getElementById('logBody');
+  const n=tbody.children.length+1;
+  const sc=v=>v>0.6?'sh':v>0.3?'sm':'sl';
+  const pCats=(d.policy_categories||[]);
+  const bCat=d.behavioural_attack_cat||'';
+  const allCats=[...new Set([...pCats,bCat].filter(Boolean))];
+  const catHtml=allCats.length
+    ?allCats.slice(0,2).map(c=>catPill(c)||catPillFromKey(c)).join('')
+    :'<span style="color:#484f58">—</span>';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td>${n}</td>
+    <td>${action}</td>
+    <td>${catHtml}</td>
+    <td class="${sc(d.behavioural_score||0)}">${(d.behavioural_score||0).toFixed(3)}</td>
+    <td class="${sc(d.policy_severity||0)}">${(d.policy_severity||0).toFixed(2)}</td>
+    <td><span style="font-size:10px;font-weight:700" class="${sc(d.risk_score||0)}">${d.risk_level||'Low'}</span></td>
+    <td>${(d.owasp_ids||[]).map(x=>`<span class="otag">${x}</span>`).join('')||'—'}</td>
+    <td>${(d.trust_after||0).toFixed(4)}</td>
+    <td class="dp-${d.decision||'allow'}">${(d.decision||'allow').toUpperCase()}</td>
+  `;
+  tbody.appendChild(tr);
+  tbody.parentElement.scrollTop=tbody.parentElement.scrollHeight;
+}
+
+function clearTerminal(){
+  document.getElementById('terminal').innerHTML='<span class="t-init">Terminal cleared.</span>';
+}
+let _lastOutputLen=0;
+function appendTerminal(entries){
+  const el=document.getElementById('terminal');
+  entries.forEach(e=>{
+    const div=document.createElement('div');
+    div.className='t-'+e.type;
+    const px={'task':'📋 ','thought':'💭 ','hermes':'🤖 ','tool_call':'🔧 ',
+      'trust':'🛡️  ','result':'📦 ','final':'✅ Final: ','blocked':'🚨 BLOCKED: ',
+      'error':'❌ ','nudge':'💬 ','system':'⚙️  ','init':'🟢 ','waiting':'⏳ ',
+      /* LangChain ReAct types */
+      'warning':'⚠️  ','action':'⚡ ','observation':'👁️  ','langchain':'⛓️  '};
+    // colour-code trust lines by decision keyword
+    if(e.type==='trust'){
+      const dec=(e.content||'').match(/decision=(\w+)/);
+      div.style.color=dec?({ALLOW:'#3fb950',WARN:'#d29922',DENY:'#f85149'}[dec[1]]||'#8b949e'):'#8b949e';
+    } else if(e.type==='blocked'){
+      div.style.color='#f85149';
+    } else if(e.type==='final'){
+      div.style.color='#3fb950';div.style.fontWeight='600';
+    } else if(e.type==='warning'){
+      div.style.color='#d29922';
+    }
+    div.textContent=(px[e.type]||'🔹 ')+e.content;
+    el.appendChild(div);
+  });
+  el.scrollTop=el.scrollHeight;
+}
+
+let _pollOut=null,_pollSt=null,_timer=null;
+async function runTask(agentType){
+  const isLC = agentType==='langchain';
+  const taskEl  = document.getElementById(isLC?'lcPrompt':'taskPrompt');
+  const statusEl= document.getElementById(isLC?'lcStatus':'taskStatus');
+  const task = taskEl.value.trim();
+  if(!task){alert('Enter a task prompt first');return;}
+
+  // Update badges in terminal header
+  const badge=document.getElementById('agentTypeBadge');
+  badge.textContent = isLC?'LANGCHAIN':'HERMES';
+  badge.style.background  = isLC?'#2d0a2d':'#0d1f3d';
+  badge.style.color       = isLC?'#d2a8ff':'#79b8ff';
+  badge.style.borderColor = isLC?'#6e40c9':'#1f6feb';
+  const idBadge=document.getElementById('agentIdBadge');
+  idBadge.textContent = aid();
+  idBadge.style.display = aid()?'inline':'none';
+
+  clearTerminal();
+  document.getElementById('logBody').innerHTML='';
+  document.getElementById('breakdownCard').style.display='none';
+  const agentLabel = isLC?'LangChain ReAct':'Hermes';
+  statusEl.innerHTML='<span class="spinner"></span> Checking Ollama…';
+  document.getElementById('hermesSpinner').style.display='inline-flex';
+  _lastOutputLen=0;
+
+  const endpoint = isLC
+    ? `/api/agents/${aid()}/run_langchain`
+    : `/api/agents/${aid()}/run`;
+  const d=await api(endpoint,'POST',{task,role:role()});
+  if(d.error){
+    statusEl.innerHTML=`<span style="color:#f85149">❌ ${d.error}${d.fix?'<br>'+d.fix:''}</span>`;
+    document.getElementById('hermesSpinner').style.display='none';
+    return;
+  }
+
+  let elapsed=0;
+  clearInterval(_timer);
+  _timer=setInterval(()=>{
+    elapsed++;
+    const t=elapsed>=60?`${Math.floor(elapsed/60)}m ${elapsed%60}s`:`${elapsed}s`;
+    statusEl.innerHTML=`<span class="spinner"></span> ${agentLabel} thinking… ${t}`;
+  },1000);
+
+  clearInterval(_pollOut);
+  _pollOut=setInterval(async()=>{
+    const out=await api(`/api/agents/${aid()}/output?agent_type=${agentType}`);
+    if(Array.isArray(out)&&out.length>_lastOutputLen){
+      appendTerminal(out.slice(_lastOutputLen));_lastOutputLen=out.length;
+    }
+  },1000);
+
+  let ticks=0;clearInterval(_pollSt);
+  _pollSt=setInterval(async()=>{
+    const state=await api(`/api/agents/${aid()}/state`);
+    document.getElementById('logBody').innerHTML='';
+    (state.log||[]).forEach((e)=>e.action&&appendRow(e,e.action));
+    if(state.trust)updateTrust(state.trust,state.decision||'allow');
+    ticks++;
+    const done=(state.log||[]).some(e=>{
+      const a=e.action||'';
+      return a.includes('completed')||a.includes('blocked')||a.includes('error');
+    });
+    if(done||ticks>60){
+      clearInterval(_pollOut);clearInterval(_pollSt);clearInterval(_timer);
+      const out=await api(`/api/agents/${aid()}/output?agent_type=${agentType}`);
+      if(Array.isArray(out)&&out.length>_lastOutputLen)
+        appendTerminal(out.slice(_lastOutputLen));
+      document.getElementById('hermesSpinner').style.display='none';
+      const last=(state.log||[]).slice(-1)[0]||{};
+      const a=last.action||'';
+      statusEl.textContent=a.includes('error')?`❌ ${last.error||'Error'}`:
+        a.includes('blocked')?'🚨 Agent blocked by trust system':`✅ ${agentLabel} task completed`;
+    }
+  },2000);
+}
+
+checkHealth();setInterval(checkHealth,15000);
+requestAnimationFrame(()=>{cT.draw();cR.draw();});
+window.addEventListener('resize',()=>{cT.draw();cR.draw();});
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(()=>{cT.draw();cR.draw();});
+  document.querySelectorAll('#cTrust,#cRisk').forEach(cv=>ro.observe(cv.parentElement));
+}
+</script>
+</body>
+</html>

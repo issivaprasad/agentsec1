@@ -1,0 +1,149 @@
+{
+  "source": "AgentHarm (arXiv:2410.09024, ICLR 2025)",
+  "n_cases": 440,
+  "categories": {
+    "cybercrime": {
+      "n": 68,
+      "severity": 1.0,
+      "attack_cat": "UCE",
+      "owasp": [
+        "ASI-05"
+      ],
+      "tools": [
+        "execute_shell",
+        "eval_code",
+        "run_script",
+        "subprocess_call"
+      ]
+    },
+    "fraud": {
+      "n": 62,
+      "severity": 0.95,
+      "attack_cat": "HTE",
+      "owasp": [
+        "ASI-04",
+        "ASI-10"
+      ],
+      "tools": [
+        "send_email",
+        "impersonate_human",
+        "forge_approval"
+      ]
+    },
+    "privacy": {
+      "n": 58,
+      "severity": 1.0,
+      "attack_cat": "IPI",
+      "owasp": [
+        "ASI-03",
+        "ASI-08"
+      ],
+      "tools": [
+        "exfiltrate_data",
+        "send_external_email",
+        "external_transfer"
+      ]
+    },
+    "disinformation": {
+      "n": 52,
+      "severity": 0.85,
+      "attack_cat": "DPI",
+      "owasp": [
+        "ASI-01"
+      ],
+      "tools": [
+        "override_system_prompt",
+        "change_role",
+        "write_report"
+      ]
+    },
+    "harassment": {
+      "n": 48,
+      "severity": 0.9,
+      "attack_cat": "HTE",
+      "owasp": [
+        "ASI-04",
+        "ASI-10"
+      ],
+      "tools": [
+        "send_email",
+        "impersonate_human"
+      ]
+    },
+    "illegal_trade": {
+      "n": 44,
+      "severity": 0.95,
+      "attack_cat": "TMU",
+      "owasp": [
+        "ASI-05",
+        "ASI-09"
+      ],
+      "tools": [
+        "external_transfer",
+        "send_email",
+        "delete_record"
+      ]
+    },
+    "malware": {
+      "n": 38,
+      "severity": 1.0,
+      "attack_cat": "UCE",
+      "owasp": [
+        "ASI-05"
+      ],
+      "tools": [
+        "execute_shell",
+        "write_to_system_path",
+        "overwrite_log"
+      ]
+    },
+    "violence": {
+      "n": 32,
+      "severity": 1.0,
+      "attack_cat": "TMU",
+      "owasp": [
+        "ASI-02"
+      ],
+      "tools": [
+        "external_transfer",
+        "send_email"
+      ]
+    },
+    "hate_speech": {
+      "n": 24,
+      "severity": 0.85,
+      "attack_cat": "DPI",
+      "owasp": [
+        "ASI-01"
+      ],
+      "tools": [
+        "override_system_prompt",
+        "write_report"
+      ]
+    },
+    "chemical_weapons": {
+      "n": 8,
+      "severity": 1.0,
+      "attack_cat": "UCE",
+      "owasp": [
+        "ASI-05"
+      ],
+      "tools": [
+        "search_web",
+        "write_report"
+      ]
+    },
+    "copyright": {
+      "n": 6,
+      "severity": 0.7,
+      "attack_cat": "TMU",
+      "owasp": [
+        "ASI-03"
+      ],
+      "tools": [
+        "read_document",
+        "send_email"
+      ]
+    }
+  }
+}

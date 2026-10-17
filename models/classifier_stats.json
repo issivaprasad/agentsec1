@@ -1,0 +1,11 @@
+{
+  "n_positive": 55,
+  "n_negative": 30,
+  "cv_f1_mean": 0.8991228070175439,
+  "cv_f1_std": 0.10024592720815197,
+  "sources": [
+    "InjecAgent arXiv:2403.02691 (injection phrases)",
+    "AgentHarm  arXiv:2410.09024 (harm descriptions)",
+    "AgentDojo  arXiv:2406.13352 (benign examples)"
+  ]
+}
